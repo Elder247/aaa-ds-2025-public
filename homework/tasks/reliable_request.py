@@ -18,13 +18,18 @@ async def do_reliable_request(url: str, observer: ResultsObserver) -> None:
 
     Все успешно полученные результаты должны регистрироваться с помощью обсёрвера.
     """
-
+    max_attempts = 10
+    attempt = 0
+    timeout = 10
+    
     async with httpx.AsyncClient() as client:
-        # YOUR CODE GOES HERE
-        response = await client.get(url)
-        response.raise_for_status()
-        data = response.read()
+        while attempt < max_attempts:
+            try:
+                response = await client.get(url, timeout=timeout)
+                response.raise_for_status()
+                data = response.read()
 
-        observer.observe(data)
-        return
-        #####################
+                observer.observe(data)
+                return
+            except httpx.HTTPError:
+                attempt += 1
